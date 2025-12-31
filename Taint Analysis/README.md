@@ -1,59 +1,61 @@
-Tracking Privacy Risks in Android Applications
+# Tracking Privacy Risks in Android Applications
 
-This project investigates privacy risks in Android applications through static taint analysis, focusing on how potentially sensitive data may flow from device APIs to storage or network endpoints. Using Amandroid, a static analysis framework for Android, a curated set of real-world APKs was analyzed to identify sources (e.g., location, microphone, device identifiers) and sinks (e.g., file system and network communication).
+This project investigates privacy risks in Android applications through **static taint analysis**, focusing on how potentially sensitive data may flow from device APIs to storage or network endpoints. Using **Amandroid**, a static analysis framework for Android, a curated set of real-world APKs was analyzed to identify **sources** (e.g., location, microphone, device identifiers) and **sinks** (e.g., file system and network communication).
 
-The primary goals of the project were to:
+---
 
-Understand how Android applications handle user data at the code level
+## Project Goals
 
-Identify potential privacy leaks through source-to-sink data flows
+The primary goals of this project were to:
 
-Gain hands-on experience with empirical software security analysis tools
+- Understand how Android applications handle user data at the code level  
+- Identify potential privacy leaks through source-to-sink data flows  
+- Gain hands-on experience with empirical software security analysis tools  
 
---Methodology--
+---
 
-Static Analysis Tool: Amandroid
+## Methodology
 
-Dataset: 10 Android applications (6 successfully analyzed due to hardware limitations)
+### Static Analysis Tool
+- **Amandroid** (Android static taint analysis framework)
 
-Sources Examined:
+### Dataset
+- 10 Android applications  
+- 6 applications successfully analyzed due to hardware limitations  
 
-Geolocation APIs
+### Sources Examined
+- Geolocation APIs  
+- Microphone access APIs  
+- Device identifier APIs  
 
-Microphone access APIs
+### Sinks Examined
+- Local file storage  
+- Network communication  
 
-Device identifier APIs
+A custom **Python script** was developed to automatically parse Amandroid’s taint analysis output and categorize detected sources and sinks using predefined keyword signatures. The results were aggregated into a summary table and visualized for comparison across applications.
 
-Sinks Examined:
+---
 
-Local file storage
+## Key Findings
 
-Network communication
+- No taint paths were detected from sensitive sources (location, microphone, device ID) to network sinks in the analyzed applications.
+- Detected taint paths primarily involved file sinks, which aligned with expected app behavior (e.g., saving user-generated content).
+- Some applications exhibited network activity not detected by Amandroid due to code obfuscation or third-party SDK usage.
+- These additional flows were identified through manual inspection of decompiled source code, highlighting limitations of static analysis tools.
+- Observed data flows were consistent with the applications’ published privacy policies and EULAs, suggesting no undisclosed or unjustified data collection.
 
-A custom Python script was developed to automatically parse Amandroid’s taint analysis output and categorize detected sources and sinks using predefined keyword signatures. The results were aggregated into a summary table and visualized for comparison across applications.
+---
 
---Key Findings--
+## Tools & Technologies
 
-No taint paths were detected from sensitive sources (location, microphone, device ID) to network sinks in the analyzed apps.
+- **Amandroid** (static taint analysis)
+- **Python** (automation, data parsing, CSV generation)
+- **Pandas** (data aggregation and analysis)
+- APK decompilation for manual verification
+- Android privacy policy and EULA analysis
 
-Detected taint paths primarily involved file sinks, which aligned with expected app behavior (e.g., saving user-generated content).
+---
 
-Some applications showed network activity not detected by Amandroid due to obfuscation or third-party SDKs. These flows were identified through manual inspection of decompiled source code, highlighting limitations of static analysis tools.
+## Takeaways
 
-Observed data flows were consistent with the apps’ published privacy policies and EULAs, suggesting no undisclosed or unjustified data collection.
-
---Tools & Technologies--
-
-Amandroid (static taint analysis)
-
-Python (automation, data parsing, CSV generation)
-
-Pandas (data aggregation)
-
-APK decompilation for manual verification
-
-Android privacy policy and EULA analysis
-
---Takeaways--
-
-This project demonstrates how static analysis can be used to assess mobile app privacy while also illustrating its limitations when dealing with obfuscated code and third-party libraries. Combining automated taint analysis with manual code inspection provides a more complete picture of real-world Android app behavior.
+This project demonstrates how static analysis can be used to assess mobile application privacy while also illustrating its limitations when dealing with obfuscated code and third-party libraries. Combining automated taint analysis with manual code inspection provides a more complete and realistic understanding of real-world Android app behavior.
