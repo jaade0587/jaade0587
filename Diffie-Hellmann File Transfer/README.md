@@ -1,29 +1,100 @@
-**Encrypted File Transfer & Diffie-Hellman MITM Lab**
+**Encrypted File Transfer & Diffie-Hellman Security Lab**
 
-This repository contains a set of Python scripts demonstrating encrypted file transfer, Diffie–Hellman key exchange, and a man-in-the-middle (MITM) attack against unauthenticated DH.
-The project is intended for educational and security research purposes.
+This repository contains a set of Python scripts that explore file transfer over TCP, progressing from plaintext transmission to encrypted communication, and concluding with a man-in-the-middle (MITM) attack against unauthenticated Diffie–Hellman key exchange.
+
+The project is designed for educational and security research purposes, demonstrating both secure protocol construction and common cryptographic pitfalls.
+
+**Project Overview**
+
+The repository intentionally follows a progression:
+
+Plaintext file transfer (no security)
+
+Password-based encryption
+
+Diffie–Hellman key exchange
+
+Active MITM attack
+
+This structure highlights why cryptography is necessary, how it is applied, and what goes wrong when authentication is missing.
 
 **Contents**
 
-eft.py – Password-based encrypted file transfer (baseline implementation)
+uft.py
+Unencrypted file transfer (baseline implementation)
 
-eft-dh.py – Diffie–Hellman–based encrypted file transfer
+eft.py
+Password-based encrypted file transfer using symmetric cryptography
 
-dh-proxy.py – MITM proxy that intercepts and decrypts DH-encrypted traffic
+eft-dh.py
+Diffie–Hellman–based encrypted file transfer with dynamic session keys
 
-1. eft.py — Encrypted File Transfer (Password-Based)
+dh-proxy.py
+Man-in-the-middle proxy exploiting unauthenticated Diffie–Hellman
 
-A simple encrypted file transfer tool that uses a pre-shared password to derive a symmetric key and securely transmit data over a TCP connection.
+**1. uft.py — Unencrypted File Transfer (Baseline)**
+
+A minimal TCP file transfer utility with no encryption, integrity protection, or authentication.
+This script serves as the baseline against which the encrypted implementations can be compared.
+
+**Purpose**
+
+To demonstrate how raw file transfer works over the network and why transmitting data in plaintext is insecure.
 
 **Features**
 
-AES-GCM encryption for confidentiality and integrity
+Plain TCP socket communication
 
-PBKDF2 key derivation from a user-supplied password
+Length-prefixed framing
 
 Client/server architecture
 
-Encrypted data sent via standard input (stdin)
+Streams data via stdin/stdout
+
+No cryptographic protections
+
+**Usage**
+
+**Server**
+
+python3 uft.py -l 9000 > received_file
+
+
+**Client**
+
+cat file.txt | python3 uft.py 127.0.0.1 9000
+
+**Security Implications**
+
+Data is transmitted in plaintext
+
+Traffic can be read or modified by any observer on the network
+
+Included strictly for educational comparison
+
+**2. eft.py — Encrypted File Transfer (Password-Based)**
+
+An encrypted file transfer tool that uses a pre-shared password to derive a symmetric encryption key.
+
+**Features**
+
+AES-GCM encryption (confidentiality + integrity)
+
+PBKDF2 key derivation from a shared password
+
+Client/server architecture
+
+Data streamed via stdin
+
+**How It Works**
+
+Client derives a key from a password and random salt
+
+File data is encrypted using AES-GCM
+
+Encrypted payload is transmitted to the server
+
+Server derives the same key and decrypts the data
 
 **Usage**
 
@@ -38,13 +109,13 @@ cat file.txt | python3 eft.py -k password123 127.0.0.1 9000
 
 **Output**
 
-Decrypted data is written to decrypted_output.txt
+Decrypted file written to decrypted_output.txt
 
-Plaintext is also echoed to stdout
+Plaintext echoed to stdout
 
-2. eft-dh.py — Diffie-Hellman Encrypted File Transfer
+**3. eft-dh.py — Diffie-Hellman Encrypted File Transfer**
 
-An enhanced version of encrypted file transfer that replaces the shared password with a Diffie–Hellman key exchange, establishing a session key dynamically.
+An encrypted file transfer implementation that replaces pre-shared passwords with a Diffie–Hellman key exchange, allowing both parties to establish a shared session key dynamically.
 
 **Features**
 
@@ -54,17 +125,17 @@ AES-GCM encryption using derived session keys
 
 No pre-shared secret required
 
-Demonstrates secure key agreement over an insecure channel
+Length-prefixed encrypted data framing
 
 **How It Works**
 
 Client and server exchange DH public values
 
-Both sides derive the same shared secret
+A shared secret is computed independently on both sides
 
 A session key is derived from the shared secret
 
-Data is encrypted and transferred securely
+File data is encrypted and transmitted securely
 
 **Usage**
 
@@ -81,22 +152,22 @@ cat file.txt | python3 eft-dh.py 127.0.0.1 9000
 
 Decrypted file written to decrypted_output.txt
 
-3. dh-proxy.py — Diffie-Hellman MITM Proxy
+**4. dh-proxy.py — Diffie-Hellman MITM Proxy**
 
 A man-in-the-middle proxy that exploits the lack of authentication in Diffie–Hellman key exchange.
-The proxy transparently intercepts, decrypts, modifies, and re-encrypts traffic between the client and server.
+The proxy transparently intercepts, decrypts, optionally modifies, and re-encrypts traffic between the client and server.
 
 **Purpose**
 
-This script demonstrates why unauthenticated Diffie–Hellman is vulnerable to MITM attacks, even when strong encryption (AES-GCM) is used.
+To demonstrate that encryption alone is insufficient if key exchange is not authenticated.
 
 **Features**
 
 Acts as a fake server to the client and a fake client to the server
 
-Establishes two separate DH sessions
+Establishes two independent DH sessions
 
-Decrypts traffic from both sides
+Decrypts traffic from both directions
 
 Logs intercepted plaintext to disk
 
@@ -106,7 +177,7 @@ Optionally modifies data in transit
 python3 dh-proxy.py -l 8000 REAL_SERVER_IP 9000
 
 
-Then point the eft-dh.py client at the proxy instead of the real server.
+Then configure the eft-dh.py client to connect to the proxy instead of the real server.
 
 **Output Files**
 
@@ -114,26 +185,33 @@ intercepted_by_proxy.txt — data intercepted from the client
 
 intercepted_from_server.txt — data intercepted from the server
 
-**Security Notes**
+**Security Lessons Demonstrated**
 
-These tools do not authenticate peers
+Plaintext protocols expose all data to attackers
 
-Diffie–Hellman without authentication is vulnerable to MITM
+Encryption without integrity is insufficient
 
-This project is intended for learning, testing, and demonstration only
+Diffie–Hellman provides secure key agreement only if authenticated
 
-Do not use this code in production environments
+AES-GCM provides confidentiality and integrity, but not peer authentication
+
+MITM attacks are practical against unauthenticated protocols
 
 **Educational Value**
 
-This project demonstrates:
+This repository demonstrates:
 
-Secure file transfer fundamentals
+Network protocol design fundamentals
 
-Key derivation and symmetric encryption
+Symmetric encryption and key derivation
 
 Diffie–Hellman key exchange mechanics
 
-Practical MITM attacks on cryptographic protocols
+Man-in-the-middle attacks in practice
 
-Why authentication is critical in secure communications
+The importance of authentication in secure communications
+
+**Disclaimer**
+
+These tools are intended for educational and research purposes only.
+They are not hardened, audited, or suitable for production use.
